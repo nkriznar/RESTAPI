@@ -1,8 +1,19 @@
 # 🏨 Hotel Reservation REST API
 
-A production-ready REST API for a Hotel Reservation System, built with **Django** and **Django Rest Framework (DRF)**. The API manages hotels, reservations with UUID-based confirmation numbers, and nested guest data — all backed by a cloud-hosted **Supabase PostgreSQL** database and deployed on **AWS Elastic Beanstalk**.
+A production-ready REST API for a Hotel Reservation System, built with **Django** and **Django Rest Framework (DRF)**. The API manages hotels, reservations with UUID-based confirmation numbers, and nested guest data — all backed by a cloud-hosted **Supabase PostgreSQL** database and deployed on **Render**.
 
 > **Course:** MCDA 5550 — Mobile App Development
+
+---
+
+## 🌐 Live API
+
+The API is deployed and publicly accessible at:
+
+| Endpoint | URL |
+|----------|-----|
+| Hotels List | [https://hotel-reservation-api-8jsa.onrender.com/api/hotels/](https://hotel-reservation-api-8jsa.onrender.com/api/hotels/) |
+| Create Reservation | `POST` [https://hotel-reservation-api-8jsa.onrender.com/api/reservations/](https://hotel-reservation-api-8jsa.onrender.com/api/reservations/) |
 
 ---
 
@@ -12,7 +23,7 @@ A production-ready REST API for a Hotel Reservation System, built with **Django*
 |--------------|-----------------------------------|
 | Framework    | Django 4.2 + Django REST Framework |
 | Database     | Supabase (PostgreSQL)             |
-| Deployment   | AWS Elastic Beanstalk             |
+| Deployment   | Render                            |
 | WSGI Server  | Gunicorn                          |
 
 ---
@@ -24,8 +35,6 @@ RESTAPI/
 ├── manage.py
 ├── requirements.txt
 ├── .gitignore
-├── .ebextensions/
-│   └── django.config          # AWS EB configuration
 ├── hotel_reservation/         # Django project settings
 │   ├── settings.py
 │   ├── urls.py
@@ -63,15 +72,19 @@ venv\Scripts\activate        # Windows
 # 3. Install dependencies
 pip install -r requirements.txt
 
-# 4. Run database migrations
+# 4. Set the DATABASE_URL environment variable
 #    (The database is a cloud-hosted Supabase PostgreSQL instance —
 #     no local DB setup is required.)
+set DATABASE_URL=postgresql://user:password@host:port/dbname     # Windows
+# export DATABASE_URL=postgresql://user:password@host:port/dbname  # macOS / Linux
+
+# 5. Run database migrations
 python manage.py migrate
 
-# 5. (Optional) Seed sample hotels
+# 6. (Optional) Seed sample hotels
 python manage.py shell -c "from api.models import Hotel; [Hotel.objects.get_or_create(name=h) for h in ['Marriott', 'Hilton', 'Holiday Inn']]"
 
-# 6. Start the development server
+# 7. Start the development server
 python manage.py runserver
 ```
 
@@ -158,51 +171,31 @@ Creates a new reservation with a nested list of guests. Returns a system-generat
 
 ---
 
-## AWS Elastic Beanstalk Deployment
+## Deployment (Render)
 
-### Prerequisites
+This application is deployed on [Render](https://render.com) as a Web Service.
 
-- AWS CLI configured (`aws configure`)
-- EB CLI installed (`pip install awsebcli`)
+### How It Works
 
-### Deployment Steps
+1. Render connects directly to this GitHub repository.
+2. On every push to `main`, Render automatically rebuilds and redeploys.
+3. The `DATABASE_URL` environment variable is configured in the Render dashboard to point to the Supabase PostgreSQL instance.
 
-```bash
-# 1. Initialize Elastic Beanstalk
-eb init -p python-3.11 hotel-reservation-api --region us-east-1
+### Build & Start Commands (configured in Render)
 
-# 2. Create an environment and deploy
-eb create hotel-reservation-env
-
-# 3. Open the deployed application
-eb open
-
-# 4. (Subsequent deployments)
-eb deploy
-```
-
-The `.ebextensions/django.config` file automatically handles:
-- Setting the WSGI path to `hotel_reservation.wsgi:application`
-- Running `python manage.py migrate` on each deploy
-- Collecting static files
-
-### Useful EB Commands
-
-| Command       | Description                    |
-|---------------|--------------------------------|
-| `eb status`   | Check environment health       |
-| `eb logs`     | View application logs          |
-| `eb ssh`      | SSH into the EC2 instance      |
-| `eb terminate`| Tear down the environment      |
+| Setting       | Value                                              |
+|---------------|----------------------------------------------------|
+| Build Command | `pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput` |
+| Start Command | `gunicorn hotel_reservation.wsgi:application`      |
 
 ---
 
 ## Testing with Postman
 
 1. Import the two endpoints into Postman.
-2. **GET** `http://<your-eb-url>/api/hotels/` — verify the hotel list returns.
-3. **GET** `http://<your-eb-url>/api/hotels/?checkin=2026-04-01&checkout=2026-04-05` — verify filtering.
-4. **POST** `http://<your-eb-url>/api/reservations/` — send the nested JSON body and verify a `201` response with a `confirmation_number`.
+2. **GET** `https://hotel-reservation-api-8jsa.onrender.com/api/hotels/` — verify the hotel list returns.
+3. **GET** `https://hotel-reservation-api-8jsa.onrender.com/api/hotels/?checkin=2026-04-01&checkout=2026-04-05` — verify filtering.
+4. **POST** `https://hotel-reservation-api-8jsa.onrender.com/api/reservations/` — send the nested JSON body and verify a `201` response with a `confirmation_number`.
 
 ---
 
