@@ -1,3 +1,5 @@
+Nikola Kriznar A00445187
+
 # 🏨 Hotel Reservation REST API
 
 A production-ready REST API for a Hotel Reservation System, built with **Django** and **Django Rest Framework (DRF)**. The API manages hotels, reservations with UUID-based confirmation numbers, and nested guest data — all backed by a cloud-hosted **Supabase PostgreSQL** database and deployed on **Render**.
